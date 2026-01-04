@@ -1,0 +1,64 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+bin/
+dist/
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+coverage.txt
+coverage.html
+
+# Go workspace file
+go.work
+
+# Air temporary files
+tmp/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE - VSCode
+.vscode/
+*.code-workspace
+.history/
+
+# IDE - GoLand / IntelliJ
+.idea/
+*.iml
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.swp
+*.swo
+*~
+
+# MySQL assets (embedded resources)
+internal/database/mysql/assets/
+
+# Atlas executables
+internal/database/atlas/darwin/
+internal/database/atlas/linux/
+internal/database/atlas/windows/
+
+# Runtime directories
+crud_temp/
+crud_backup/
+mysql/
+ui/

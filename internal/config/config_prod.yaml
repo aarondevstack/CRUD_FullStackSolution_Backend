@@ -1,0 +1,15 @@
+api:
+  name: "CRUDSolution"
+  host: "0.0.0.0"
+  port: 8888
+
+database:
+  type: "mysql"
+  host: "127.0.0.1"
+  port: 3306
+  user: "crud"
+  password: "crud@2026"
+  name: "crud-db"
+  autoBackup:
+    enable: true
+    cron: "0 2 * * *"
