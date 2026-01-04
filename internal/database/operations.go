@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"time"
 
 	"github.com/AaronDevStack/CRUD_FullStackSolution/Backend/internal/config"
 	"github.com/AaronDevStack/CRUD_FullStackSolution/Backend/internal/database/atlas"
@@ -106,15 +108,119 @@ func extractMigrations(tempDir string) error {
 
 // BackupDatabase creates a database backup
 func BackupDatabase() error {
-	fmt.Println("Database backup - to be implemented")
-	// TODO: Implement backup using mysqldump
+	fmt.Println("Backing up database...")
+
+	// Load configuration
+	if err := config.Load(); err != nil {
+		return fmt.Errorf("failed to load config: %w", err)
+	}
+
+	baseDir, err := config.GetBaseDir()
+	if err != nil {
+		return fmt.Errorf("failed to get base dir: %w", err)
+	}
+
+	// Paths
+	mysqldumpName := "mysqldump"
+	if os.Getenv("GOOS") == "windows" {
+		mysqldumpName = "mysqldump.exe"
+	}
+	mysqldumpPath := filepath.Join(baseDir, "mysql", "bin", mysqldumpName)
+	backupDir := filepath.Join(baseDir, "crud_backup")
+
+	// Ensure backup directory exists
+	if err := os.MkdirAll(backupDir, 0755); err != nil {
+		return fmt.Errorf("failed to create backup directory: %w", err)
+	}
+
+	// Generate filename
+	timestamp := time.Now().Format("20060102_150405")
+	filename := fmt.Sprintf("backup_%s.sql", timestamp)
+	backupPath := filepath.Join(backupDir, filename)
+
+	// Build command
+	// mysqldump -u[user] -p[password] -h[host] -P[port] --databases [dbname]
+	args := []string{
+		fmt.Sprintf("-u%s", config.AppConfig.Database.User),
+		fmt.Sprintf("-p%s", config.AppConfig.Database.Password),
+		fmt.Sprintf("-h%s", config.AppConfig.Database.Host),
+		fmt.Sprintf("-P%d", config.AppConfig.Database.Port),
+		"--databases",
+		config.AppConfig.Database.Name,
+	}
+
+	// Create output file
+	outfile, err := os.Create(backupPath)
+	if err != nil {
+		return fmt.Errorf("failed to create backup file: %w", err)
+	}
+	defer outfile.Close()
+
+	cmd := exec.Command(mysqldumpPath, args...)
+	cmd.Stdout = outfile
+	cmd.Stderr = os.Stderr
+
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("mysqldump failed: %w", err)
+	}
+
+	fmt.Printf("✅ Database backup created: %s\n", backupPath)
 	return nil
 }
 
 // RestoreDatabase restores database from backup
 func RestoreDatabase(backupFile string) error {
-	fmt.Printf("Database restore from %s - to be implemented\n", backupFile)
-	// TODO: Implement restore using mysql command
+	fmt.Printf("Restoring database from %s...\n", backupFile)
+
+	// Validate file exists
+	if _, err := os.Stat(backupFile); os.IsNotExist(err) {
+		return fmt.Errorf("backup file not found: %s", backupFile)
+	}
+
+	// Load configuration
+	if err := config.Load(); err != nil {
+		return fmt.Errorf("failed to load config: %w", err)
+	}
+
+	baseDir, err := config.GetBaseDir()
+	if err != nil {
+		return fmt.Errorf("failed to get base dir: %w", err)
+	}
+
+	// Paths
+	mysqlName := "mysql"
+	if os.Getenv("GOOS") == "windows" {
+		mysqlName = "mysql.exe"
+	}
+	mysqlPath := filepath.Join(baseDir, "mysql", "bin", mysqlName)
+
+	// Build command
+	// mysql -u[user] -p[password] -h[host] -P[port] [dbname] < [backupFile]
+	args := []string{
+		fmt.Sprintf("-u%s", config.AppConfig.Database.User),
+		fmt.Sprintf("-p%s", config.AppConfig.Database.Password),
+		fmt.Sprintf("-h%s", config.AppConfig.Database.Host),
+		fmt.Sprintf("-P%d", config.AppConfig.Database.Port),
+		config.AppConfig.Database.Name,
+	}
+
+	// Open input file
+	infile, err := os.Open(backupFile)
+	if err != nil {
+		return fmt.Errorf("failed to open backup file: %w", err)
+	}
+	defer infile.Close()
+
+	cmd := exec.Command(mysqlPath, args...)
+	cmd.Stdin = infile
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("mysql restore failed: %w", err)
+	}
+
+	fmt.Println("✅ Database restored successfully!")
 	return nil
 }
 
