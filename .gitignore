@@ -49,6 +49,14 @@ logs/
 *.swo
 *~
 
+# Atlas binaries
+internal/database/atlas/darwin/atlas-darwin-arm64-latest
+internal/database/atlas/linux/atlas-linux-amd64-latest
+internal/database/atlas/windows/atlas-windows-amd64-latest.exe
+
+# Temporary migration directory
+crud_temp/
+
 # MySQL assets (embedded resources)
 internal/database/mysql/assets/
 
