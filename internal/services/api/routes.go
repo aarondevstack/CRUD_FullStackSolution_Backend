@@ -1,6 +1,9 @@
 package api
 
 import (
+	"os"
+	"path/filepath"
+
 	"github.com/AaronDevStack/CRUD_FullStackSolution/Backend/internal/database/ent"
 	"github.com/AaronDevStack/CRUD_FullStackSolution/Backend/internal/services/api/handlers"
 	"github.com/AaronDevStack/CRUD_FullStackSolution/Backend/internal/services/api/middleware"
@@ -55,4 +58,27 @@ func RegisterRoutes(app *fiber.App, client *ent.Client) {
 	comments.Get("/:id", commentHandler.GetComment)
 	comments.Patch("/:id", commentHandler.UpdateComment)
 	comments.Delete("/:id", commentHandler.DeleteComment)
+
+	// Static File Serving for Frontend UI
+	// Get executable directory
+	execPath, err := os.Executable()
+	if err == nil {
+		execDir := filepath.Dir(execPath)
+		uiPath := filepath.Join(execDir, "ui")
+
+		// Check if ui directory exists
+		if _, err := os.Stat(uiPath); err == nil {
+			// Serve static files from ui directory
+			app.Static("/", uiPath, fiber.Static{
+				Browse: false,
+				Index:  "index.html",
+			})
+
+			// SPA fallback - serve index.html for all non-API routes
+			app.Use(func(c *fiber.Ctx) error {
+				indexPath := filepath.Join(uiPath, "index.html")
+				return c.SendFile(indexPath)
+			})
+		}
+	}
 }
