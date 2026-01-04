@@ -27,12 +27,18 @@ func NewBlogHandler(client *ent.Client) *BlogHandler {
 // @Produce json
 // @Param page query int false "Page number"
 // @Param limit query int false "Page size"
-// @Success 200 {array} dto.BlogResponse
+// @Success 200 {object} dto.PaginatedBlogResponse
 // @Router /blogs [get]
 func (h *BlogHandler) GetBlogs(c *fiber.Ctx) error {
 	page, _ := strconv.Atoi(c.Query("page", "1"))
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
 	offset := (page - 1) * limit
+
+	// Get total count
+	total, err := h.client.Blog.Query().Count(context.Background())
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
 
 	blogs, err := h.client.Blog.Query().
 		WithAuthor().
@@ -44,7 +50,7 @@ func (h *BlogHandler) GetBlogs(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	var response []dto.BlogResponse
+	var data []dto.BlogResponse
 	for _, b := range blogs {
 		resp := dto.BlogResponse{
 			ID:        int64(b.ID),
@@ -55,10 +61,13 @@ func (h *BlogHandler) GetBlogs(c *fiber.Ctx) error {
 			CreatedAt: b.CreatedAt,
 			UpdatedAt: b.UpdatedAt,
 		}
-		response = append(response, resp)
+		data = append(data, resp)
 	}
 
-	return c.JSON(response)
+	return c.JSON(dto.PaginatedBlogResponse{
+		Data:  data,
+		Total: total,
+	})
 }
 
 // CreateBlog creates a new blog
@@ -73,11 +82,24 @@ func (h *BlogHandler) GetBlogs(c *fiber.Ctx) error {
 func (h *BlogHandler) CreateBlog(c *fiber.Ctx) error {
 	var req dto.CreateBlogRequest
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request: " + err.Error()})
+	}
+
+	// Validate required fields
+	if req.Title == "" || req.Content == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Title and content are required"})
+	}
+
+	// If UserID is not provided in request, get it from JWT
+	userID := parseID(req.UserID)
+	if userID == 0 {
+		if uid, ok := c.Locals("user_id").(int64); ok {
+			userID = uid
+		}
 	}
 
 	// Verify user exists first
-	exists, err := h.client.User.Query().Where(user.ID(int(req.UserID))).Exist(context.Background())
+	exists, err := h.client.User.Query().Where(user.ID(int(userID))).Exist(context.Background())
 	if err != nil || !exists {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid user ID"})
 	}
@@ -85,7 +107,7 @@ func (h *BlogHandler) CreateBlog(c *fiber.Ctx) error {
 	b, err := h.client.Blog.Create().
 		SetTitle(req.Title).
 		SetContent(req.Content).
-		SetAuthorID(int(req.UserID)).
+		SetAuthorID(int(userID)).
 		Save(context.Background())
 
 	if err != nil {

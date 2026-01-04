@@ -28,12 +28,18 @@ func NewUserHandler(client *ent.Client) *UserHandler {
 // @Produce json
 // @Param page query int false "Page number"
 // @Param limit query int false "Page size"
-// @Success 200 {array} dto.UserResponse
+// @Success 200 {object} dto.PaginatedUserResponse
 // @Router /users [get]
 func (h *UserHandler) GetUsers(c *fiber.Ctx) error {
 	page, _ := strconv.Atoi(c.Query("page", "1"))
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
 	offset := (page - 1) * limit
+
+	// Get total count
+	total, err := h.client.User.Query().Count(context.Background())
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
 
 	users, err := h.client.User.Query().
 		Limit(limit).
@@ -44,9 +50,9 @@ func (h *UserHandler) GetUsers(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	var response []dto.UserResponse
+	var data []dto.UserResponse
 	for _, u := range users {
-		response = append(response, dto.UserResponse{
+		data = append(data, dto.UserResponse{
 			ID:        int64(u.ID),
 			Username:  u.Username,
 			Email:     u.Email,
@@ -56,7 +62,10 @@ func (h *UserHandler) GetUsers(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.JSON(response)
+	return c.JSON(dto.PaginatedUserResponse{
+		Data:  data,
+		Total: total,
+	})
 }
 
 // CreateUser creates a new user

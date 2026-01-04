@@ -28,12 +28,18 @@ func NewCommentHandler(client *ent.Client) *CommentHandler {
 // @Produce json
 // @Param page query int false "Page number"
 // @Param limit query int false "Page size"
-// @Success 200 {array} dto.CommentResponse
+// @Success 200 {object} dto.PaginatedCommentResponse
 // @Router /comments [get]
 func (h *CommentHandler) GetComments(c *fiber.Ctx) error {
 	page, _ := strconv.Atoi(c.Query("page", "1"))
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
 	offset := (page - 1) * limit
+
+	// Get total count
+	total, err := h.client.Comment.Query().Count(context.Background())
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
 
 	comments, err := h.client.Comment.Query().
 		WithAuthor().
@@ -46,7 +52,7 @@ func (h *CommentHandler) GetComments(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	var response []dto.CommentResponse
+	var data []dto.CommentResponse
 	for _, cm := range comments {
 		resp := dto.CommentResponse{
 			ID:        int64(cm.ID),
@@ -57,10 +63,13 @@ func (h *CommentHandler) GetComments(c *fiber.Ctx) error {
 			CreatedAt: cm.CreatedAt,
 			UpdatedAt: cm.UpdatedAt,
 		}
-		response = append(response, resp)
+		data = append(data, resp)
 	}
 
-	return c.JSON(response)
+	return c.JSON(dto.PaginatedCommentResponse{
+		Data:  data,
+		Total: total,
+	})
 }
 
 // CreateComment creates a new comment
@@ -75,12 +84,30 @@ func (h *CommentHandler) GetComments(c *fiber.Ctx) error {
 func (h *CommentHandler) CreateComment(c *fiber.Ctx) error {
 	var req dto.CreateCommentRequest
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request: " + err.Error()})
+	}
+
+	// Validate required fields
+	if req.Content == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Content is required"})
+	}
+
+	blogID := parseID(req.BlogID)
+	if blogID == 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Blog ID is required"})
+	}
+
+	// If UserID is not provided in request, get it from JWT
+	userID := parseID(req.UserID)
+	if userID == 0 {
+		if uid, ok := c.Locals("user_id").(int64); ok {
+			userID = uid
+		}
 	}
 
 	// Verify user and blog exist
-	userExists, _ := h.client.User.Query().Where(user.ID(int(req.UserID))).Exist(context.Background())
-	blogExists, _ := h.client.Blog.Query().Where(blog.ID(int(req.BlogID))).Exist(context.Background())
+	userExists, _ := h.client.User.Query().Where(user.ID(int(userID))).Exist(context.Background())
+	blogExists, _ := h.client.Blog.Query().Where(blog.ID(int(blogID))).Exist(context.Background())
 
 	if !userExists || !blogExists {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid user ID or blog ID"})
@@ -88,8 +115,8 @@ func (h *CommentHandler) CreateComment(c *fiber.Ctx) error {
 
 	cm, err := h.client.Comment.Create().
 		SetContent(req.Content).
-		SetAuthorID(int(req.UserID)).
-		SetBlogID(int(req.BlogID)).
+		SetAuthorID(int(userID)).
+		SetBlogID(int(blogID)).
 		Save(context.Background())
 
 	if err != nil {

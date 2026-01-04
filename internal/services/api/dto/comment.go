@@ -15,9 +15,9 @@ type CommentResponse struct {
 
 // CreateCommentRequest represents comment creation request
 type CreateCommentRequest struct {
-	Content string `json:"content" validate:"required"`
-	BlogID  int64  `json:"blog_id" validate:"required"`
-	UserID  int64  `json:"user_id" validate:"required"`
+	Content string      `json:"content" validate:"required"`
+	BlogID  interface{} `json:"blog_id" validate:"required"` // Accept string or int
+	UserID  interface{} `json:"user_id" validate:"required"` // Accept string or int
 }
 
 // UpdateCommentRequest represents comment update request

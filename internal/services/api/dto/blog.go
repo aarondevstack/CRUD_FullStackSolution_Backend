@@ -15,9 +15,9 @@ type BlogResponse struct {
 
 // CreateBlogRequest represents blog creation request
 type CreateBlogRequest struct {
-	Title   string `json:"title" validate:"required,min=1,max=255"`
-	Content string `json:"content" validate:"required"`
-	UserID  int64  `json:"user_id" validate:"required"`
+	Title   string      `json:"title" validate:"required,min=1,max=255"`
+	Content string      `json:"content" validate:"required"`
+	UserID  interface{} `json:"user_id"` // Accept string or int
 }
 
 // UpdateBlogRequest represents blog update request
