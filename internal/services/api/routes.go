@@ -36,14 +36,23 @@ func RegisterRoutes(app *fiber.App, client *ent.Client) {
 	users := protected.Group("/users")
 	users.Get("/", userHandler.GetUsers)
 	users.Post("/", userHandler.CreateUser)
+	users.Get("/:id", userHandler.GetUser)
+	users.Patch("/:id", userHandler.UpdateUser)
+	users.Delete("/:id", userHandler.DeleteUser)
 
 	// Blog Routes
 	blogs := protected.Group("/blogs")
 	blogs.Get("/", blogHandler.GetBlogs)
 	blogs.Post("/", blogHandler.CreateBlog)
+	blogs.Get("/:id", blogHandler.GetBlog)
+	blogs.Patch("/:id", blogHandler.UpdateBlog)
+	blogs.Delete("/:id", blogHandler.DeleteBlog)
 
 	// Comment Routes
 	comments := protected.Group("/comments")
 	comments.Get("/", commentHandler.GetComments)
 	comments.Post("/", commentHandler.CreateComment)
+	comments.Get("/:id", commentHandler.GetComment)
+	comments.Patch("/:id", commentHandler.UpdateComment)
+	comments.Delete("/:id", commentHandler.DeleteComment)
 }

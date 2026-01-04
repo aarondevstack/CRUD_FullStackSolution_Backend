@@ -113,3 +113,118 @@ func (h *CommentHandler) CreateComment(c *fiber.Ctx) error {
 		UpdatedAt: cm.UpdatedAt,
 	})
 }
+
+// GetComment returns a single comment
+// @Security Bearer
+// @Summary Get comment by ID
+// @Tags comments
+// @Accept json
+// @Produce json
+// @Param id path int true "Comment ID"
+// @Success 200 {object} dto.CommentResponse
+// @Router /comments/{id} [get]
+func (h *CommentHandler) GetComment(c *fiber.Ctx) error {
+	id, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ID"})
+	}
+
+	cm, err := h.client.Comment.Query().
+		Where(comment.ID(id)).
+		WithAuthor().
+		WithBlog().
+		Only(context.Background())
+
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Comment not found"})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(dto.CommentResponse{
+		ID:        int64(cm.ID),
+		Content:   cm.Content,
+		BlogID:    int64(cm.Edges.Blog.ID),
+		UserID:    int64(cm.Edges.Author.ID),
+		Username:  cm.Edges.Author.Username,
+		CreatedAt: cm.CreatedAt,
+		UpdatedAt: cm.UpdatedAt,
+	})
+}
+
+// UpdateComment updates a comment
+// @Security Bearer
+// @Summary Update comment
+// @Tags comments
+// @Accept json
+// @Produce json
+// @Param id path int true "Comment ID"
+// @Param request body dto.UpdateCommentRequest true "Comment details"
+// @Success 200 {object} dto.CommentResponse
+// @Router /comments/{id} [patch]
+func (h *CommentHandler) UpdateComment(c *fiber.Ctx) error {
+	id, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ID"})
+	}
+
+	var req dto.UpdateCommentRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
+	}
+
+	update := h.client.Comment.UpdateOneID(id)
+	if req.Content != nil {
+		update.SetContent(*req.Content)
+	}
+
+	cm, err := update.Save(context.Background())
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Comment not found"})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	// Re-query to get edges
+	cm, _ = h.client.Comment.Query().
+		Where(comment.ID(cm.ID)).
+		WithAuthor().
+		WithBlog().
+		Only(context.Background())
+
+	return c.JSON(dto.CommentResponse{
+		ID:        int64(cm.ID),
+		Content:   cm.Content,
+		BlogID:    int64(cm.Edges.Blog.ID),
+		UserID:    int64(cm.Edges.Author.ID),
+		Username:  cm.Edges.Author.Username,
+		CreatedAt: cm.CreatedAt,
+		UpdatedAt: cm.UpdatedAt,
+	})
+}
+
+// DeleteComment deletes a comment
+// @Security Bearer
+// @Summary Delete comment
+// @Tags comments
+// @Param id path int true "Comment ID"
+// @Success 204 "No Content"
+// @Router /comments/{id} [delete]
+func (h *CommentHandler) DeleteComment(c *fiber.Ctx) error {
+	id, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ID"})
+	}
+
+	err = h.client.Comment.DeleteOneID(id).Exec(context.Background())
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Comment not found"})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.SendStatus(fiber.StatusNoContent)
+}

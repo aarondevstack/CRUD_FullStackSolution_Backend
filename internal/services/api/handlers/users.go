@@ -97,3 +97,115 @@ func (h *UserHandler) CreateUser(c *fiber.Ctx) error {
 		UpdatedAt: u.UpdatedAt,
 	})
 }
+
+// GetUser returns a single user
+// @Security Bearer
+// @Summary Get user by ID
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param id path int true "User ID"
+// @Success 200 {object} dto.UserResponse
+// @Router /users/{id} [get]
+func (h *UserHandler) GetUser(c *fiber.Ctx) error {
+	id, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ID"})
+	}
+
+	u, err := h.client.User.Query().Where(user.ID(id)).Only(context.Background())
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "User not found"})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(dto.UserResponse{
+		ID:        int64(u.ID),
+		Username:  u.Username,
+		Email:     u.Email,
+		Role:      u.Role.String(),
+		CreatedAt: u.CreatedAt,
+		UpdatedAt: u.UpdatedAt,
+	})
+}
+
+// UpdateUser updates a user
+// @Security Bearer
+// @Summary Update user
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param id path int true "User ID"
+// @Param request body dto.UpdateUserRequest true "User details"
+// @Success 200 {object} dto.UserResponse
+// @Router /users/{id} [patch]
+func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
+	id, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ID"})
+	}
+
+	var req dto.UpdateUserRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
+	}
+
+	update := h.client.User.UpdateOneID(id)
+	if req.Username != nil {
+		update.SetUsername(*req.Username)
+	}
+	if req.Email != nil {
+		update.SetEmail(*req.Email)
+	}
+	if req.Role != nil {
+		update.SetRole(user.Role(*req.Role))
+	}
+	if req.Password != nil {
+		hashed, _ := bcrypt.GenerateFromPassword([]byte(*req.Password), bcrypt.DefaultCost)
+		update.SetPassword(string(hashed))
+	}
+
+	u, err := update.Save(context.Background())
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "User not found"})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(dto.UserResponse{
+		ID:        int64(u.ID),
+		Username:  u.Username,
+		Email:     u.Email,
+		Role:      u.Role.String(),
+		CreatedAt: u.CreatedAt,
+		UpdatedAt: u.UpdatedAt,
+	})
+}
+
+// DeleteUser deletes a user
+// @Security Bearer
+// @Summary Delete user
+// @Description Delete user and all related blogs/comments
+// @Tags users
+// @Param id path int true "User ID"
+// @Success 204 "No Content"
+// @Router /users/{id} [delete]
+func (h *UserHandler) DeleteUser(c *fiber.Ctx) error {
+	id, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ID"})
+	}
+
+	err = h.client.User.DeleteOneID(id).Exec(context.Background())
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "User not found"})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.SendStatus(fiber.StatusNoContent)
+}
