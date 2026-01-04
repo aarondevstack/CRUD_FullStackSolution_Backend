@@ -94,6 +94,9 @@ var statusApiCmd = &cobra.Command{
 		fmt.Println("Checking service status...")
 		svcConfig := &service.Config{
 			Name: "CRUDSolution_WebService",
+			Option: service.KeyValue{
+				"UserService": true,
+			},
 		}
 		prg := api.NewAPIService()
 		s, err := service.New(prg, svcConfig)
