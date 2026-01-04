@@ -5,6 +5,7 @@ go 1.25.3
 require (
 	entgo.io/ent v0.14.5
 	github.com/go-sql-driver/mysql v1.9.3
+	github.com/kardianos/service v1.2.4
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
 	golang.org/x/crypto v0.46.0

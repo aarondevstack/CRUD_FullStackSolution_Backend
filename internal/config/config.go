@@ -65,10 +65,12 @@ func Load() error {
 }
 
 // GetBaseDir returns the directory where the executable is located
+// This is where MySQL and other runtime files will be stored
 func GetBaseDir() (string, error) {
 	execPath, err := os.Executable()
 	if err != nil {
 		return "", fmt.Errorf("failed to get executable path: %w", err)
 	}
+	// Return the directory containing the executable
 	return filepath.Dir(execPath), nil
 }
