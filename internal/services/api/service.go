@@ -73,7 +73,10 @@ func ManageService(action string) error {
 		Name:        "CRUDSolution_WebService",
 		DisplayName: "CRUD Solution Web Service",
 		Description: "High-performance Go Fiber Web Service",
-		Arguments:   []string{"api", "serve"}, // Arguments to run the service
+		Arguments:   []string{"services", "api", "serve"}, // Arguments to run the service
+		Option: service.KeyValue{
+			"UserService": true,
+		},
 	}
 
 	prg := NewAPIService()
