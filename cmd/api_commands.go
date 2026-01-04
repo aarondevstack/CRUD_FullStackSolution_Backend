@@ -1,89 +1,133 @@
 package cmd
 
 import (
-	"github.com/AaronDevStack/CRUD_FullStackSolution/Backend/internal/cli/services"
+	"fmt"
+	"os"
+
+	"github.com/AaronDevStack/CRUD_FullStackSolution/Backend/internal/services/api"
+	"github.com/kardianos/service"
 	"github.com/spf13/cobra"
 )
 
-var apiServeCmd = &cobra.Command{
+// serveCmd represents the serve command
+var serveCmd = &cobra.Command{
 	Use:   "serve",
-	Short: "Start API server in foreground",
-	Long:  `Start the API server in foreground mode (blocking, terminate with Ctrl+C).`,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return services.ServeAPI()
+	Short: "Run the API server in foreground",
+	Run: func(cmd *cobra.Command, args []string) {
+		if err := api.ManageService(""); err != nil {
+			fmt.Printf("Error running service: %v\n", err)
+			os.Exit(1)
+		}
 	},
 }
 
-var apiInstallCmd = &cobra.Command{
+// installCmd
+var installApiCmd = &cobra.Command{
 	Use:   "install",
 	Short: "Install API as system service",
-	Long:  `Install API as a system service.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return services.InstallAPI()
+	Run: func(cmd *cobra.Command, args []string) {
+		if err := api.ManageService("install"); err != nil {
+			fmt.Printf("Failed to install service: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Println("✅ API Service installed successfully!")
 	},
 }
 
-var apiUninstallCmd = &cobra.Command{
+// uninstallCmd
+var uninstallApiCmd = &cobra.Command{
 	Use:   "uninstall",
 	Short: "Uninstall API system service",
-	Long:  `Uninstall API system service.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return services.UninstallAPI()
+	Run: func(cmd *cobra.Command, args []string) {
+		if err := api.ManageService("uninstall"); err != nil {
+			fmt.Printf("Failed to uninstall service: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Println("✅ API Service uninstalled successfully!")
 	},
 }
 
-var apiStartCmd = &cobra.Command{
+// startCmd
+var startApiCmd = &cobra.Command{
 	Use:   "start",
-	Short: "Start API service",
-	Long:  `Start the API system service.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return services.StartAPI()
+	Short: "Start API system service",
+	Run: func(cmd *cobra.Command, args []string) {
+		if err := api.ManageService("start"); err != nil {
+			fmt.Printf("Failed to start service: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Println("✅ API Service started successfully!")
 	},
 }
 
-var apiStopCmd = &cobra.Command{
+// stopCmd
+var stopApiCmd = &cobra.Command{
 	Use:   "stop",
-	Short: "Stop API service",
-	Long:  `Stop the API system service.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return services.StopAPI()
+	Short: "Stop API system service",
+	Run: func(cmd *cobra.Command, args []string) {
+		if err := api.ManageService("stop"); err != nil {
+			fmt.Printf("Failed to stop service: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Println("✅ API Service stopped successfully!")
 	},
 }
 
-var apiStatusCmd = &cobra.Command{
+// restartCmd
+var restartApiCmd = &cobra.Command{
+	Use:   "restart",
+	Short: "Restart API system service",
+	Run: func(cmd *cobra.Command, args []string) {
+		if err := api.ManageService("restart"); err != nil {
+			fmt.Printf("Failed to restart service: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Println("✅ API Service restarted successfully!")
+	},
+}
+
+// statusCmd
+var statusApiCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Check API service status",
-	Long:  `Query the status of the API system service.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return services.StatusAPI()
-	},
-}
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("Checking service status...")
+		svcConfig := &service.Config{
+			Name: "CRUDSolution_WebService",
+		}
+		prg := api.NewAPIService()
+		s, err := service.New(prg, svcConfig)
+		if err != nil {
+			fmt.Printf("Status check failed: %v\n", err)
+			return
+		}
 
-var apiRestartCmd = &cobra.Command{
-	Use:   "restart",
-	Short: "Restart API service",
-	Long:  `Restart the API system service.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return services.RestartAPI()
-	},
-}
+		status, err := s.Status()
+		if err != nil {
+			fmt.Printf("Failed to get status: %v\n", err)
+			return
+		}
 
-var apiDeployCmd = &cobra.Command{
-	Use:   "deploy",
-	Short: "Deploy API service (install and start)",
-	Long:  `Deploy API service by installing and starting it.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return services.DeployAPI()
+		switch status {
+		case service.StatusRunning:
+			fmt.Println("Service is running ✅")
+		case service.StatusStopped:
+			fmt.Println("Service is stopped ⏹️")
+		case service.StatusUnknown:
+			fmt.Println("Service status is unknown ❓")
+		default:
+			fmt.Printf("Service status code: %d\n", status)
+		}
 	},
 }
 
 func init() {
-	apiCmd.AddCommand(apiServeCmd)
-	apiCmd.AddCommand(apiInstallCmd)
-	apiCmd.AddCommand(apiUninstallCmd)
-	apiCmd.AddCommand(apiStartCmd)
-	apiCmd.AddCommand(apiStopCmd)
-	apiCmd.AddCommand(apiStatusCmd)
-	apiCmd.AddCommand(apiRestartCmd)
-	apiCmd.AddCommand(apiDeployCmd)
+	servicesCmd.AddCommand(apiCmd)
+	apiCmd.AddCommand(serveCmd)
+	apiCmd.AddCommand(installApiCmd)
+	apiCmd.AddCommand(uninstallApiCmd)
+	apiCmd.AddCommand(startApiCmd)
+	apiCmd.AddCommand(stopApiCmd)
+	apiCmd.AddCommand(restartApiCmd)
+	apiCmd.AddCommand(statusApiCmd)
 }

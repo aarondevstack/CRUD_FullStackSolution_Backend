@@ -15,9 +15,11 @@ type Config struct {
 }
 
 type APIConfig struct {
-	Name string `mapstructure:"name"`
-	Host string `mapstructure:"host"`
-	Port int    `mapstructure:"port"`
+	Name      string `mapstructure:"name"`
+	Host      string `mapstructure:"host"`
+	Port      int    `mapstructure:"port"`
+	JWTSecret string `mapstructure:"jwt_secret"`
+	JWTExpiry string `mapstructure:"jwt_expiry"`
 }
 
 type DatabaseConfig struct {

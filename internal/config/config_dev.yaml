@@ -2,6 +2,8 @@ api:
   name: "CRUDSolution"
   host: "127.0.0.1"
   port: 8888
+  jwt_secret: "dev-secret-key-change-in-production-2026"
+  jwt_expiry: "24h"
 
 database:
   type: "mysql"
