@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/AaronDevStack/CRUD_FullStackSolution/Backend/internal/cli/database"
+	"github.com/AaronDevStack/CRUD_FullStackSolution/Backend/internal/database"
 	"github.com/spf13/cobra"
 )
 

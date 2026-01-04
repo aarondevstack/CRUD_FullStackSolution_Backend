@@ -11,13 +11,6 @@ func MigrateDatabase() error {
 	return nil
 }
 
-// SeedDatabase seeds the database with initial data
-func SeedDatabase() error {
-	fmt.Println("Database seeding - to be implemented")
-	// TODO: Implement seeding logic using Ent
-	return nil
-}
-
 // BackupDatabase creates a database backup
 func BackupDatabase() error {
 	fmt.Println("Database backup - to be implemented")

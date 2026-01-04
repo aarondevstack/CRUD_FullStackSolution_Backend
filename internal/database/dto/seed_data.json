@@ -1,0 +1,200 @@
+{
+  "users": [
+    {
+      "username": "admin1",
+      "password": "admin@2026",
+      "email": "admin1@example.com",
+      "role": "admin"
+    },
+    {
+      "username": "user1",
+      "password": "user@2026",
+      "email": "user1@example.com",
+      "role": "user"
+    },
+    {
+      "username": "alice",
+      "password": "password123",
+      "email": "alice@example.com",
+      "role": "user"
+    },
+    {
+      "username": "bob",
+      "password": "password123",
+      "email": "bob@example.com",
+      "role": "user"
+    },
+    {
+      "username": "charlie",
+      "password": "password123",
+      "email": "charlie@example.com",
+      "role": "admin"
+    }
+  ],
+  "addresses": [
+    {
+      "username": "admin1",
+      "street": "123 Admin St",
+      "city": "San Francisco",
+      "state": "CA",
+      "zip": "94102"
+    },
+    {
+      "username": "user1",
+      "street": "456 User Ave",
+      "city": "New York",
+      "state": "NY",
+      "zip": "10001"
+    },
+    {
+      "username": "alice",
+      "street": "789 Oak Rd",
+      "city": "Austin",
+      "state": "TX",
+      "zip": "73301"
+    },
+    {
+      "username": "bob",
+      "street": "321 Pine Ln",
+      "city": "Seattle",
+      "state": "WA",
+      "zip": "98101"
+    },
+    {
+      "username": "charlie",
+      "street": "654 Maple Dr",
+      "city": "Boston",
+      "state": "MA",
+      "zip": "02101"
+    }
+  ],
+  "blogs": [
+    {
+      "author_username": "admin1",
+      "title": "Welcome to Our Platform",
+      "content": "This is the first blog post on our new platform. We're excited to have you here!"
+    },
+    {
+      "author_username": "admin1",
+      "title": "Platform Updates",
+      "content": "We've made several improvements to the platform. Check out the new features!"
+    },
+    {
+      "author_username": "user1",
+      "title": "My First Post",
+      "content": "Hello everyone! This is my first blog post. Looking forward to sharing more."
+    },
+    {
+      "author_username": "alice",
+      "title": "Tech Trends 2026",
+      "content": "Exploring the latest technology trends and innovations in 2026."
+    },
+    {
+      "author_username": "bob",
+      "title": "Travel Adventures",
+      "content": "Sharing my recent travel experiences and tips for fellow travelers."
+    },
+    {
+      "author_username": "charlie",
+      "title": "Coding Best Practices",
+      "content": "A comprehensive guide to writing clean and maintainable code."
+    },
+    {
+      "author_username": "alice",
+      "title": "AI and Machine Learning",
+      "content": "Deep dive into the world of artificial intelligence and machine learning."
+    },
+    {
+      "author_username": "bob",
+      "title": "Healthy Living Tips",
+      "content": "Simple tips for maintaining a healthy lifestyle in a busy world."
+    },
+    {
+      "author_username": "charlie",
+      "title": "Database Design Patterns",
+      "content": "Understanding common database design patterns and when to use them."
+    },
+    {
+      "author_username": "admin1",
+      "title": "Community Guidelines",
+      "content": "Please read our community guidelines to ensure a positive experience for everyone."
+    }
+  ],
+  "comments": [
+    {
+      "blog_title": "Welcome to Our Platform",
+      "author_username": "user1",
+      "content": "Great platform! Looking forward to using it."
+    },
+    {
+      "blog_title": "Welcome to Our Platform",
+      "author_username": "alice",
+      "content": "Thanks for creating this!"
+    },
+    {
+      "blog_title": "My First Post",
+      "author_username": "admin1",
+      "content": "Welcome to the community!"
+    },
+    {
+      "blog_title": "Tech Trends 2026",
+      "author_username": "bob",
+      "content": "Very insightful article!"
+    },
+    {
+      "blog_title": "Tech Trends 2026",
+      "author_username": "charlie",
+      "content": "I agree with your points about AI."
+    },
+    {
+      "blog_title": "Travel Adventures",
+      "author_username": "alice",
+      "content": "Love your travel stories!"
+    },
+    {
+      "blog_title": "Coding Best Practices",
+      "author_username": "admin1",
+      "content": "Excellent guide for developers."
+    },
+    {
+      "blog_title": "Coding Best Practices",
+      "author_username": "user1",
+      "content": "This helped me improve my code quality."
+    },
+    {
+      "blog_title": "AI and Machine Learning",
+      "author_username": "bob",
+      "content": "Fascinating topic!"
+    },
+    {
+      "blog_title": "Database Design Patterns",
+      "author_username": "alice",
+      "content": "Very helpful for my current project."
+    },
+    {
+      "blog_title": "Community Guidelines",
+      "author_username": "user1",
+      "content": "Clear and fair guidelines."
+    },
+    {
+      "blog_title": "Platform Updates",
+      "author_username": "charlie",
+      "content": "The new features are amazing!"
+    },
+    {
+      "blog_title": "Healthy Living Tips",
+      "author_username": "admin1",
+      "content": "Great advice for staying healthy."
+    },
+    {
+      "blog_title": "Healthy Living Tips",
+      "author_username": "alice",
+      "content": "I've started following these tips!"
+    },
+    {
+      "blog_title": "My First Post",
+      "author_username": "bob",
+      "content": "Welcome! Looking forward to your future posts."
+    }
+  ]
+}
